@@ -24,6 +24,18 @@ require("./UserDetails");
 
 const user = mongoose.model("user Info");
 
+app.post("/login", async (req, res) => {
+  const curUser = await user.findOne(req.body);
+
+  if (!curUser) {
+    return res.json({ status: "user not found" });
+  } else if (req.body.ps == user.ps) {
+    return res.json({ status: "success Login" });
+  } else {
+    return res.json({ status: "success" });
+  }
+});
+
 require("./ChartsInFocus");
 
 const addToFocus = mongoose.model("focus charts");
@@ -48,28 +60,44 @@ app.post("/getFromFocus", async (req, res) => {
     }
   });
 
-// app.post("/register", async(req,res)=>{
-//     // const{name, psd} = req.body;
-//     // console.log(req.body);
-//     try {
-//         await user.create({
-//             uname: req.body.uname,
-//             ps : req.body.ps,
-//         });
-//         res.send({status:ok})
-//     } catch (error) {
-//         res.send({status:"error"})
-//     }
-// })
+  app.post("/removeFromFocus", async (req, res) => {
+    try {
+       await addToFocus.deleteOne({ chartPair: req.body.chartPair});
+      res.send({ data: 'deleted from focus' });
+    } catch (error) {
+      res.send({ status: "chart deleting error",error });
+    }
+  });
 
-app.post("/login", async (req, res) => {
-  const curUser = await user.findOne(req.body);
+  require('./DivergenceChart')
 
-  if (!curUser) {
-    return res.json({ status: "user not found" });
-  } else if (req.body.ps == user.ps) {
-    return res.json({ status: "success Login" });
-  } else {
-    return res.json({ status: "success" });
-  }
-});
+  const divergenceChart = mongoose.model('divergence charts');
+
+  app.post("/addToDivergence", async (req, res) => {
+    try {
+      await divergenceChart.create({
+          chartPair: req.body.chartPair,
+      });
+      res.send({ status: 'chartDivergenceAdded' });
+    } catch (error) {
+      res.send({ status: "chartAdding to divergence error",error });
+    }
+  });
+
+  app.post("/getFromDivergence", async (req, res) => {
+    try {
+      const result = await divergenceChart.find();
+      res.send({ data: result });
+    } catch (error) {
+      res.send({ status: "chart getting error",error });
+    }
+  });
+
+  app.post("/removeFromDivergence", async (req, res) => {
+    try {
+       await divergenceChart.deleteOne({ chartPair: req.body.chartPair});
+      res.send({ data: 'deleted from divergence' });
+    } catch (error) {
+      res.send({ status: "chart deleting error",error });
+    }
+  });
